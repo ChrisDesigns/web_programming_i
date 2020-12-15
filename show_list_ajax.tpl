@@ -10,15 +10,15 @@
         $("#content").append("<table class=\"w3-table w3-bordered w3-border>\"");
         $.each(rows, function(i, row) {
             $("#content").append("<tr>");
-                $("#content").append("<td><a href=\"/update_task/\"" + row["id"] + "><i class=\"material-icons\">edit</i></a></td>");
+                $("#content").append(`<td><a href="/update_task/${row["id"]}"><i class="material-icons">edit</i></a></td>`);
                 $("#content").append("<td>" + row["task"] + "</td>");
                 if (row["status"]) {
-                    $("#content").append("<td><a href=\"/update_status/\"" + row["id"] + "/0><i class=\"material-icons\">check_box</i></a></td>");
+                    $("#content").append(`<td><a href="/update_status/${row["id"]}/0"><i class="material-icons">check_box</i></a></td>`);
                 }
                 else {
-                    $("#content").append("<td><a href=\"/update_status/\"" + row["id"] + "/1><i class=\"material-icons\">check_box_outline_blank</i></a></td>");
+                    $("#content").append(`<td><a href="/update_status/${row["id"]}/1"><i class="material-icons">check_box_outline_blank</i></a></td>`);
                 }
-                $("#content").append("<td><a href=\"/delete_item/\"" + row["id"] + "><i class=\"material-icons\">delete</i></a></td>");
+                $("#content").append(`<td><a href="/delete_item/${row["id"]}"><i class="material-icons">delete</i></a></td>`);
             $("#content").append("</tr>");
         });
         $("#content").append("</table>");

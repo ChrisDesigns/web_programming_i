@@ -99,7 +99,7 @@ def post_register():
     redirect('/')
 
 
-@get('/')
+@get('/show_list')
 def get_show_list():
     session = get_session(request, response)
     if session['username'] == 'Guest':
@@ -109,7 +109,7 @@ def get_show_list():
     result=[dict(r) for r in result]
     return template("show_list", rows=result, session=session)
 
-@get('/show_list_ajax')
+@get('/')
 def get_show_list_ajax():
     session = get_session(request, response)
     if session['username'] == 'Guest':

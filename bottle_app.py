@@ -144,6 +144,14 @@ def get_update_status(id, value):
     db['todo'].update({'id':id, 'status':(value!=0)},['id'])
     redirect('/')
 
+@get('/delete/all')
+def get_delete_all():
+    session = get_session(request, response)
+    if session['username'] == 'Guest':
+        redirect('/login')
+        return
+    db['todo'].delete()
+    redirect('/')
 
 @get('/delete_item/<id:int>')
 def get_delete_item(id):

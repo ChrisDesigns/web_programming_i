@@ -14,8 +14,7 @@
                 $("#content").append("<td>" + row["task"] + "</td>");
                 if (row["status"]) {
                     $("#content").append(`<td><a href="/update_status/${row["id"]}/0"><i class="material-icons">check_box</i></a></td>`);
-                }
-                else {
+                } else {
                     $("#content").append(`<td><a href="/update_status/${row["id"]}/1"><i class="material-icons">check_box_outline_blank</i></a></td>`);
                 }
                 $("#content").append(`<td><a href="/delete_item/${row["id"]}"><i class="material-icons">delete</i></a></td>`);
@@ -23,11 +22,26 @@
         });
         $("#content").append("</table>");
     });
+
+    $('#task-btn').click( async function() {
+        const task = $('#task-value').val();
+        if (task !== '') {
+            const formData = new FormData();
+            formData.append('new_task', task);
+            await fetch('/new_item', {
+                method: 'POST',
+                body: formData
+            });
+            $('#task-value').val('');
+        }
+    });
+    
   })
   </script>
 </head>
 <body>
 %include("header.tpl", session=session)
+%include("new_item_ajax.tpl")
 <div id="content"></div>
 %include("footer.tpl", session=session)
 </body>

@@ -11,7 +11,7 @@
         }
     }
     console.log("sending request");
-    xhttp.open("GET", "http://dev-web-drdelozier.pythonanywhere.com/static/data.txt", true);
+    xhttp.open("GET", "/static/data.txt", true);
     xhttp.send();
   };
   </script>

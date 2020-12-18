@@ -15,7 +15,7 @@
             $.each(rows, function(i, row) {
                 const tableRow = $("<tr/>");
                 const tableData1 = $("<td/>")
-                    .html('<a href="/update_task/${row["id"]}"><i class="material-icons">edit</i></a>');
+                    .html(`<a href="/update_task/${row["id"]}"><i class="material-icons">edit</i></a>`);
                 const tableData2 = $("<td/>").html(row["task"]);
                 const tableData3 = $("<td/>")
                     .html(`<a href="/update_status/${row["id"]}/${row["status"] ^ 1}"><i class="material-icons">${row["status"] ? "check_box" : "check_box_outline_blank"}</i></a>`);

@@ -121,10 +121,22 @@ def get_show_list():
 @get('/')
 def get_show_list_ajax():
     session = get_session(request, response)
+    filterFinished = bool(int(request.cookies.get("filter_finished", False)))
     if session['username'] == 'Guest':
         redirect('/login')
         return
-    return template("show_list_ajax", session=session)
+    return template("show_list_ajax", session=session, filterFinished=filterFinished)
+
+@post('/setFilterCookie')
+def set_filter_cookie():
+    session = get_session(request, response)
+    response.content_type = 'application/json'
+    if session['username'] == 'Guest':
+        return "[]"
+    previousValue = int(request.cookies.get("filter_finished", 1))
+    newValue = previousValue ^ 1
+    response.set_cookie("filter_finished", str(newValue), path='/')
+    return json.dumps(dict({'filter_finished': bool(newValue)}))
 
 @get('/get_tasks')
 def get_get_tasks():
@@ -133,7 +145,12 @@ def get_get_tasks():
     if session['username'] == 'Guest':
         return "[]"
     else:
-        result = db['todo'].all()
+        filterFinished = bool(int(request.cookies.get("filter_finished", False)))
+        result = []
+        if (filterFinished):
+            result = db['todo'].find(status=0)
+        else:
+            result = db['todo'].all()
         tasks= [dict(r) for r in result]
         # tasks = [
         #     {"id" : 1, "task": "do something interesting", "status":False },

@@ -18,12 +18,12 @@
                 if (searchFilterText == "" || taskText.includes(searchFilterText)) {
                     const tableRow = $("<tr/>");
                     const tableData1 = $("<td/>")
-                        .html(`<a href="/update_task/${row["id"]}"><i class="material-icons">edit</i></a>`);
+                        .html(`<a href="/update_task/${row["_id"]["$oid"]}"><i class="material-icons">edit</i></a>`);
                     const tableData2 = $("<td/>").html(taskText);
                     const tableData3 = $("<td/>")
-                        .html(`<a href="/update_status/${row["id"]}/${row["status"] ^ 1}"><i class="material-icons">${row["status"] ? "check_box" : "check_box_outline_blank"}</i></a>`);
+                        .html(`<a href="/update_status/${row["_id"]["$oid"]}/${row["status"] ^ 1}"><i class="material-icons">${row["status"] ? "check_box" : "check_box_outline_blank"}</i></a>`);
                     const tableData4 = $("<td/>")
-                        .html(`<a href="/delete_item/${row["id"]}"><i class="material-icons">delete</i></a>`);
+                        .html(`<a href="/delete_item/${row["_id"]["$oid"]}"><i class="material-icons">delete</i></a>`);
                     tableRow.append(tableData1, tableData2, tableData3, tableData4);
                     table.append(tableRow);
                 }

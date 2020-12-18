@@ -3,9 +3,18 @@ import datetime
 import time
 import uuid
 import dataset
-import json
+import pymongo
+from bson.objectid import ObjectId
+from bson.json_util import dumps
 
-db = dataset.connect('sqlite:///todo.db')
+
+client = pymongo.MongoClient("mongodb://127.0.0.1:27017/todo?retryWrites=true&w=majority",
+                             connectTimeoutMS=30000,
+                             socketTimeoutMS=None,
+                             # socketKeepAlive=True,
+                             connect=False, maxPoolsize=1)
+
+db = client.todo
 
 from bottle import get, post, request, response, template, redirect
 
@@ -22,21 +31,25 @@ def get_session(request, response):
     if session_id == None:
         session_id = str(uuid.uuid4())
         session = { 'session_id':session_id, "username":"Guest", "time":int(time.time()) }
-        db['session'].insert(session)
+        db.session.insert(session)
         response.set_cookie("session_id",session_id)
     else:
-        session=db['session'].find_one(session_id=session_id)
+        session = db.session.find_one( {"session_id": session_id} )
         if session == None:
             session_id = str(uuid.uuid4())
             session = { 'session_id':session_id, "username":"Guest", "time":int(time.time()) }
-            db['session'].insert(session)
+            db.session.insert(session)
             response.set_cookie("session_id",session_id)
 
             # session = {"message":"no session found with the id =" + session_id}
     return session
 
 def save_session(session):
-    db['session'].update(session,['session_id'])
+    db.session.find_one_and_update(
+    {"session_id" : session['session_id']},
+    {"$set":
+        {"username": session['username']}
+    })
 
 @get('/login')
 def get_login():
@@ -58,7 +71,7 @@ def post_login():
     #     return
     username = request.forms.get("username").strip()
     password = request.forms.get("password").strip()
-    profile = db['profile'].find_one(username=username)
+    profile = db.profile.find_one( {"username": username} )
     if profile == None:
         redirect('/login_error')
         return
@@ -100,11 +113,11 @@ def post_register():
     if len(password) < 8:
         redirect('/login_error')
         return
-    profile = db['profile'].find_one(username=username)
+    profile = db.profile.find_one( {"username": username} )
     if profile:
         redirect('/login_error')
         return
-    db['profile'].insert({'username':username, 'password':password})
+    db.profile.insert({'username':username, 'password':password})
     redirect('/')
 
 
@@ -114,7 +127,7 @@ def get_show_list():
     if session['username'] == 'Guest':
         redirect('/login')
         return
-    result = db['todo'].all()
+    result = db.task.find()
     result=[dict(r) for r in result]
     return template("show_list", rows=result, session=session)
 
@@ -136,7 +149,7 @@ def set_filter_cookie():
     previousValue = int(request.cookies.get("filter_finished", 1))
     newValue = previousValue ^ 1
     response.set_cookie("filter_finished", str(newValue), path='/')
-    return json.dumps(dict({'filter_finished': bool(newValue)}))
+    return dumps(dict({'filter_finished': bool(newValue)}))
 
 @get('/get_tasks')
 def get_get_tasks():
@@ -148,26 +161,32 @@ def get_get_tasks():
         filterFinished = bool(int(request.cookies.get("filter_finished", False)))
         result = []
         if (filterFinished):
-            result = db['todo'].find(status=0)
+            result = db.task.find({'status': False})
         else:
-            result = db['todo'].all()
-        tasks= [dict(r) for r in result]
-        # tasks = [
-        #     {"id" : 1, "task": "do something interesting", "status":False },
-        #     {"id" : 2, "task": "do something enjoyable", "status":False },
-        #     {"id" : 3, "task": "do something useful", "status":False }
-        #     ]
-        text = json.dumps(tasks)
+            result = db.task.find()
+
+        tasks = [dict(r) for r in result]
+        text = dumps(tasks)
         return text
 
-@get('/update_status/<id:int>/<value:int>')
-def get_update_status(id, value):
+@get('/update_status/<_id>/<value:int>')
+def get_update_status(_id, value):
     session = get_session(request, response)
     if session['username'] == 'Guest':
         redirect('/login')
         return
-    #result = db['todo'].find_one(id=id)
-    db['todo'].update({'id':id, 'status':(value!=0)},['id'])
+    result = db.task.update_one( {"_id" : ObjectId(_id)}, {'$set': {'status': (value!=0)}} )
+    redirect('/')
+
+
+@get('/delete_item/<_id>')
+def get_delete_item(_id):
+    session = get_session(request, response)
+    if session['username'] == 'Guest':
+        redirect('/login')
+        return
+    # given an id, delete the relevant document
+    result = db.task.delete_one( {"_id": ObjectId(_id)} )
     redirect('/')
 
 @get('/delete/all')
@@ -176,28 +195,19 @@ def get_delete_all():
     if session['username'] == 'Guest':
         redirect('/login')
         return
-    db['todo'].delete()
+    db.task.drop()
     redirect('/')
 
-@get('/delete_item/<id:int>')
-def get_delete_item(id):
+
+@get('/update_task/<_id>')
+def get_update_task(_id):
     session = get_session(request, response)
     if session['username'] == 'Guest':
         redirect('/login')
         return
-    db['todo'].delete(id=id)
-    redirect('/')
-
-
-@get('/update_task/<id:int>')
-def get_update_task(id):
-    session = get_session(request, response)
-    if session['username'] == 'Guest':
-        redirect('/login')
-        return
-    result = db['todo'].find_one(id=id)
-    return template("update_task", row=result)
-
+    # given an id, get the document and populate a form
+    result = db.task.find_one( {"_id": ObjectId(_id)} )
+    return template("update_task", row=dict(result))
 
 @post('/update_task')
 def post_update_task():
@@ -205,9 +215,10 @@ def post_update_task():
     if session['username'] == 'Guest':
         redirect('/login')
         return
-    id = int(request.forms.get("id").strip())
+    # given an id and an updated task in a form, find the document and modify the task value
+    _id = request.forms.get("_id").strip()
     updated_task = request.forms.get("updated_task").strip()
-    db['todo'].update({'id':id, 'task':updated_task},['id'])
+    result = db.task.update_one( {"_id" : ObjectId(_id)}, {'$set': {'task': updated_task}} )
     redirect('/')
 
 
@@ -227,7 +238,7 @@ def post_new_item():
         redirect('/login')
         return
     new_task = request.forms.get("new_task").strip()
-    db['todo'].insert({'task':new_task, 'status':False})
+    db.task.insert_one({'task':new_task, 'status':False})
     redirect('/')
 
 

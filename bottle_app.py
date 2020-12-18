@@ -1,3 +1,4 @@
+import os
 import datetime
 import time
 import uuid
@@ -6,7 +7,15 @@ import json
 
 db = dataset.connect('sqlite:///todo.db')
 
-from bottle import get, post, request, response, template, redirect, default_app
+from bottle import get, post, request, response, template, redirect
+
+ON_PYTHONANYWHERE = "PYTHONANYWHERE_DOMAIN" in os.environ.keys()
+
+if ON_PYTHONANYWHERE:
+    from bottle import default_app 
+else:
+    from bottle import run, debug
+
 
 def get_session(request, response):
     session_id = request.cookies.get("session_id",None)
@@ -205,9 +214,10 @@ def post_new_item():
     redirect('/')
 
 
-application = default_app()
-
 
 if __name__ == "__main__":
-    #print(get_show_list())
-    get_update_task(6)
+    if ON_PYTHONANYWHERE:
+        application = default_app()
+    else:
+        debug(True)
+        run(host="localhost", port=8080)

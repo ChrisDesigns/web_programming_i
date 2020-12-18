@@ -9,20 +9,21 @@
 
     function buildData () {
         $.getJSON("/get_tasks", function(rows) {
-            $("#content").append("<table class=\"w3-table w3-bordered w3-border>\"");
+            const table = $("<table/>")
+                .addClass("w3-table w3-bordered w3-border")
+                .appendTo("#content");
             $.each(rows, function(i, row) {
-                $("#content").append("<tr>");
-                    $("#content").append(`<td><a href="/update_task/${row["id"]}"><i class="material-icons">edit</i></a></td>`);
-                    $("#content").append("<td>" + row["task"] + "</td>");
-                    if (row["status"]) {
-                        $("#content").append(`<td><a href="/update_status/${row["id"]}/0"><i class="material-icons">check_box</i></a></td>`);
-                    } else {
-                        $("#content").append(`<td><a href="/update_status/${row["id"]}/1"><i class="material-icons">check_box_outline_blank</i></a></td>`);
-                    }
-                    $("#content").append(`<td><a href="/delete_item/${row["id"]}"><i class="material-icons">delete</i></a></td>`);
-                $("#content").append("</tr>");
+                const tableRow = $("<tr/>");
+                const tableData1 = $("<td/>")
+                    .html('<a href="/update_task/${row["id"]}"><i class="material-icons">edit</i></a>');
+                const tableData2 = $("<td/>").html(row["task"]);
+                const tableData3 = $("<td/>")
+                    .html(`<a href="/update_status/${row["id"]}/${row["status"] ^ 1}"><i class="material-icons">${row["status"] ? "check_box" : "check_box_outline_blank"}</i></a>`);
+                const tableData4 = $("<td/>")
+                    .html(`<a href="/delete_item/${row["id"]}"><i class="material-icons">delete</i></a>`);
+                tableRow.append(tableData1, tableData2, tableData3, tableData4);
+                table.append(tableRow);
             });
-            $("#content").append("</table>");
         });
     }
 

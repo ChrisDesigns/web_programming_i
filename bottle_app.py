@@ -235,7 +235,7 @@ def get_new_item():
     if session['username'] == 'Guest':
         redirect('/login')
         return
-    return template("new_item")
+    return template("new_item", session=session)
 
 
 @post('/new_item')

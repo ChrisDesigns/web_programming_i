@@ -58,7 +58,7 @@ def get_login():
     if session['username'] != 'Guest':
         redirect('/')
         return
-    return template("login", csrf_token="abcrsrerredadfa")
+    return template("login", session=session, csrf_token="abcrsrerredadfa")
 
 @post('/login')
 def post_login():
@@ -97,7 +97,7 @@ def get_register():
     if session['username'] != 'Guest':
         redirect('/')
         return
-    return template("register", csrf_token="abcrsrerredadfa")
+    return template("register", session=session, csrf_token="abcrsrerredadfa")
 
 @post('/register')
 def post_register():

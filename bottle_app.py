@@ -123,6 +123,10 @@ def post_register():
     db.profile.insert_one({'username':username, 'password':passwordHashed})
     redirect('/')
 
+@get('/login_error')
+def get_login_error():
+    session = get_session(request, response)
+    return template("login_error", session=session)
 
 @get('/show_list')
 def get_show_list():

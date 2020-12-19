@@ -6,7 +6,7 @@
 </head>
 <body>
 %include("header.tpl", session=session)
-<div class="login-ctn w3-container" style="
+<div class="register-ctn w3-container" style="
     display: flex;
     flex-direction: column;
     align-items: center;

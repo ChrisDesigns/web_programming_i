@@ -16,7 +16,7 @@
         User Name: <input type="text" maxlength="100" name="username" style="display: flex; width: 20em;"/><br>
         Password:  <input type="password" maxlength="100" name="password" style="display: flex; width: 20em;"/><br>
         <input type="hidden" name="csrf_token" value="{{csrf_token}}"/><br>
-        <input type="submit" name="register" value="Register"/
+        <input type="submit" name="register" value="Register"/>
     </form>
 </div>
 %include("footer.tpl", session=session)

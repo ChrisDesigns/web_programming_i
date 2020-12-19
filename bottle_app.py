@@ -248,7 +248,36 @@ def post_new_item():
     db.task.insert_one({'task':new_task, 'status':False})
     redirect('/')
 
+@get('/profile')
+def get_profile_view():
+    session = get_session(request, response)
+    if session['username'] == 'Guest':
+        redirect('/login')
+        return
+    return template("profile", session=session)
 
+@post('/changePass')
+def get_pass_change():
+    session = get_session(request, response)
+    if session['username'] == 'Guest':
+        redirect('/login')
+        return
+        
+    password1 = request.forms.get("password1").strip().encode("utf-8")
+    password2 = request.forms.get("password2").strip().encode("utf-8")
+    passwordHashed = bcrypt.hashpw(password1, bcrypt.gensalt())
+    if len(password1) < 8:
+        # status="Passwords need to be longer than 8 characters."
+        redirect('/login_error')
+        return
+    if password1 != password2:
+        # status="Passwords don't match."
+        redirect('/login_error')
+        return
+
+    db.profile.find_one_and_update({"session_id" : session['username']}, {"$set": { "password": passwordHashed} })
+    # status="Password has been sucessfully set."
+    redirect('/profile')
 
 if __name__ == "__main__":
     if ON_PYTHONANYWHERE:

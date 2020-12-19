@@ -4,6 +4,7 @@ import time
 import uuid
 import dataset
 import pymongo
+import bcrypt
 from bson.objectid import ObjectId
 from bson.json_util import dumps
 
@@ -31,14 +32,14 @@ def get_session(request, response):
     if session_id == None:
         session_id = str(uuid.uuid4())
         session = { 'session_id':session_id, "username":"Guest", "time":int(time.time()) }
-        db.session.insert(session)
+        db.session.insert_one(session)
         response.set_cookie("session_id",session_id)
     else:
         session = db.session.find_one( {"session_id": session_id} )
         if session == None:
             session_id = str(uuid.uuid4())
             session = { 'session_id':session_id, "username":"Guest", "time":int(time.time()) }
-            db.session.insert(session)
+            db.session.insert_one(session)
             response.set_cookie("session_id",session_id)
 
             # session = {"message":"no session found with the id =" + session_id}
@@ -70,12 +71,12 @@ def post_login():
     #     redirect('/login_error')
     #     return
     username = request.forms.get("username").strip()
-    password = request.forms.get("password").strip()
+    password = request.forms.get("password").strip().encode("utf-8")
     profile = db.profile.find_one( {"username": username} )
     if profile == None:
         redirect('/login_error')
         return
-    if password != profile["password"]:
+    if not bcrypt.checkpw(password, profile["password"]):
         redirect('/login_error')
         return
     session['username'] = username
@@ -109,7 +110,9 @@ def post_register():
     #     redirect('/login_error')
     #     return
     username = request.forms.get("username").strip()
-    password = request.forms.get("password").strip()
+    password = request.forms.get("password").strip().encode("utf-8")
+    passwordHashed = bcrypt.hashpw(password, bcrypt.gensalt())
+
     if len(password) < 8:
         redirect('/login_error')
         return
@@ -117,7 +120,7 @@ def post_register():
     if profile:
         redirect('/login_error')
         return
-    db.profile.insert({'username':username, 'password':password})
+    db.profile.insert_one({'username':username, 'password':passwordHashed})
     redirect('/')
 
 
